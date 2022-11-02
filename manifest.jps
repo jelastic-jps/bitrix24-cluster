@@ -1,0 +1,215 @@
+type: install
+name: Bitrix
+
+logo: https://raw.githubusercontent.com/lazarenkoalexey/bitrix/main/images/bitrix24.png
+
+description: Bitrix24 Cluster
+
+baseUrl: https://raw.githubusercontent.com/jelastic-jps/
+
+onBeforeInit: /scripts/beforeInit.js?_r=${fn.random}
+onBeforeInstall: /scripts/beforeInstall.js?_r=${fn.random} 
+
+globals:
+  DB_USER: bitrix
+  DB_PASS: ${fn.password(8)}
+
+settings:
+  fields:
+    - caption: Install LiteSpeed High-Performance Web Server
+      type: checkbox
+      name: ls-addon
+      value: true
+      disabled: false
+      tooltip: "If this option is disabled, the cluster will be installed using NGINX load balancer and application servers"
+    - type: displayfield
+      hideLabel: true
+      hidden: true
+      name: warningField
+      value: 2
+      markup:
+
+engine: php7.4
+nodes: definedInOnBeforeInstall
+    
+skipNodeEmails: true
+  
+onInstall:
+  - setupSynchronization
+  - deployArchive
+  - configureApp
+  - installJps:
+      jps: ${baseUrl}mysql-cluster/master/scripts/ms-mm-configuration.jps
+      settings:
+        path: "${baseUrl}mysql-cluster/master"
+        db_user: "${globals.DB_USER}"
+        db_pass: "${globals.DB_PASS}"
+        scheme: "master"
+      nodeGroup: sqldb
+  - createDb
+  - restartNodes [cp]
+  
+actions:
+  deployArchive:
+    cmd [${nodes.cp.master.id}]: |-
+      WEBROOT="/var/www/webroot/ROOT/"
+      cd $WEBROOT && rm -rf $WEBROOT/*
+      #curl -fsSL "https://download.jelastic.com/public.php?service=files&t=b419e0e04f498fabab3bda5fff66f870&download" -o $WEBROOT/bitrix.zip
+      curl -fsSL "https://www.bitrixsoft.com/download/portal/en_bitrix24_encode.zip" -o $WEBROOT/bitrix.zip
+      unzip -o $WEBROOT/bitrix.zip
+      mkdir $WEBROOT/bitrix/php_interface/
+      
+  configureApp:
+    - if ("${nodes.cp.master.nodeType}" == "nginxphp"):
+        cmd [cp]: |-
+          ETC="/etc/"
+          sed -i "s|;extension=gd.so|extension=gd.so|g" $ETC/php.ini
+          sed -i "s|; zend_extension=/usr/lib64/php/modules/opcache.so| zend_extension=/usr/lib64/php/modules/opcache.so|g" $ETC/php.ini
+          sed -i "s|;date.timezone =.*|date.timezone = Europe/London|g" $ETC/php.ini
+        user: root
+    - else:
+        cmd [cp]: |-
+          ETC="/usr/local/lsws/lsphp/etc/"
+          sed -i "s|;extension=gd.so|extension=gd.so|g" $ETC/php.d/20-gd.ini
+          sed -i "s|;date.timezone =.*|date.timezone = Europe/London|g" $ETC/php.ini
+          #path=$(find /usr/local/lsws/ -name memcached.so)
+          
+          
+          #opcache.revalidate_freq=0
+          #max_input_vars = 10000
+          
+          #DB innodb_strict_mode = 0
+          #sed -i "s|.*extension=.*|extension=$path|g" $ETC/php.d/50-memcached.ini
+          sed -i "s|.*zend_extension=opcache.so|zend_extension=opcache.so|g" $ETC/php.d/10-opcache.ini
+          
+    - cmd [${nodes.cp.master.id}]: |-
+        WEBROOT="/var/www/webroot/ROOT/"
+        cat << EOF > $WEBROOT/bitrix/php_interface/dbconn.php
+        <? 
+        define("SHORT_INSTALL", true);
+        define("SHORT_INSTALL_CHECK", true);
+
+        define("MYSQL_TABLE_TYPE", "INNODB");
+        define("BX_UTF", true);
+
+        define("DBPersistent", false);
+        \$DBType = "mysql";
+        \$DBHost = "DB:3306";
+        \$DBName = "sitemanager";
+        \$DBLogin = "${globals.DB_USER}";
+        \$DBPassword = "${globals.DB_PASS}";
+        \$DBDebug = false;
+        \$DBDebugToFile = false;
+
+        define("BX_FILE_PERMISSIONS", 0664);
+        define("BX_DIR_PERMISSIONS", 0775);
+        @umask(~BX_DIR_PERMISSIONS);
+
+        define("BX_USE_MYSQLI", true);
+        define("DELAY_DB_CONNECT", true);
+        define("CACHED_menu", 3600);
+        define("CACHED_b_file", 3600);
+        define("CACHED_b_file_bucket_size", 10);
+        define("CACHED_b_lang", 3600);
+        define("CACHED_b_option", 3600);
+        define("CACHED_b_lang_domain", 3600);
+        define("CACHED_b_site_template", 3600);
+        define("CACHED_b_event", 3600);
+        define("CACHED_b_agent", 3660);
+        #define('BX_SECURITY_SESSION_MEMCACHE_HOST', '${nodes.cache[0].intIP}');
+        #define('BX_SECURITY_SESSION_MEMCACHE_PORT', 11211);
+        #define("BX_CACHE_TYPE", "memcached");
+        #define("BX_CACHE_SID", $_SERVER["DOCUMENT_ROOT"]."#01");
+        #define("BX_MEMCACHE_HOST", "${nodes.cache[0].intIP}");
+        #define("BX_MEMCACHE_PORT", "11211");
+        ?>
+        EOF
+
+        cat << EOF > $WEBROOT/bitrix/.settings.php
+        <?php
+        return array (
+          'utf_mode' =>
+          array (
+            'value' => true,
+            'readonly' => true,
+          ),
+          'cache_flags' =>
+          array (
+            'value' =>
+            array (
+              'config_options' => 3600,
+              'site_domain' => 3600,
+            ),
+            'readonly' => false,
+          ),
+          'cookies' =>
+          array (
+            'value' =>
+            array (
+              'secure' => false,
+              'http_only' => true,
+            ),
+            'readonly' => false,
+          ),
+          'exception_handling' =>
+          array (
+            'value' =>
+            array (
+              'debug' => false,
+              'handled_errors_types' => 4437,
+              'exception_errors_types' => 4437,
+              'ignore_silence' => false,
+              'assertion_throws_exception' => true,
+              'assertion_error_type' => 256,
+              'log' => array (
+                  'settings' =>
+                  array (
+                    'file' => '/var/log/litespeed/exceptions.log',
+                    'log_size' => 1000000,
+                ),
+              ),
+            ),
+            'readonly' => false,
+          ),
+
+          'connections' =>
+          array (
+            'value' =>
+            array (
+              'default' =>
+              array (
+                'className' => '\\Bitrix\\Main\\DB\\MysqliConnection',
+                'host' => 'DB',
+                'database' => 'sitemanager',
+                'login' => '${globals.DB_USER}',
+                'password' => '${globals.DB_PASS}',
+                'options' => 2,
+              ),
+            ),
+            'readonly' => true,
+          )
+        );
+        EOF
+        [[ $USER -eq "nginx" ]] && ETC="/etc/" || {
+          ETC="/usr/local/lsws/lsphp/etc/"
+          PHP_D="${ETC}/php.d/"
+          sed -i "s|;opcache.revalidate_freq=.*|opcache.revalidate_freq=0|g" $PHP_D/10-opcache.ini
+          sed -i "s|;extension=gd.so|extension=gd.so|g" $PHP_D/20-gd.ini
+          sed -i "s|;date.timezone =.*|date.timezone = Europe/London|g" $ETC/php.ini
+        }
+      
+  createDb:
+    - cmd[${nodes.sqldb.master.id}]:
+        mysql -u${globals.DB_USER} -p${globals.DB_PASS} -h DB -e "CREATE DATABASE IF NOT EXISTS sitemanager;"
+    - cmd[sqldb]: sed -i "s|\[mysqld\]|\[mysqld\]\nsql_mode = ''|g" /etc/my.cnf
+      user: root
+    - restartNodes[sqldb]
+    
+  setupSynchronization:
+    install:
+    - jps: https://raw.githubusercontent.com/jelastic-jps/file-sync/master/manifest.jps?_r=${fn.random}
+      nodeGroup: cp
+      skipEmail: true
+      settings:
+        optional: one_env
+        delay: 5
