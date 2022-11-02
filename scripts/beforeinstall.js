@@ -18,13 +18,13 @@ if ('${settings.ls-addon:false}'== 'true') {
     links: "sqldb:DB",
     nodeGroup: "bl",
     cloudlets: 16,
-    count: 2
+    count: 1
   }, {
     nodeType: "nginxphp",
     links: "sqldb:DB",
     nodeGroup: "cp",
     cloudlets: 16,
-    count: 2
+    count: 1
   });
 }
 
