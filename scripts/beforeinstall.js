@@ -4,13 +4,13 @@ if ('${settings.ls-addon:false}'== 'true') {
     nodeType: "litespeedadc",
     nodeGroup: "bl",
     cloudlets: 8,
-    count: 2
+    count: 1
   },{
     nodeType: "litespeedphp",
     links: "sqldb:DB",
     nodeGroup: "cp",
     cloudlets: 16,
-    count: 2
+    count: 1
   });
 } else {
   nodes.push({
