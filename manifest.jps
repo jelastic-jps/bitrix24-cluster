@@ -7,8 +7,8 @@ description: Bitrix24 Cluster
 
 baseUrl: https://raw.githubusercontent.com/jelastic-jps/
 
-onBeforeInit: bitrix24-cluster/main/scripts/beforeInit.js?_r=${fn.random}
-onBeforeInstall: bitrix24-cluster/main/scripts/beforeInstall.js?_r=${fn.random} 
+onBeforeInit: bitrix24-cluster/main/scripts/beforeinit.js?_r=${fn.random}
+onBeforeInstall: bitrix24-cluster/main/scripts/beforeinstall.js?_r=${fn.random} 
 
 globals:
   DB_USER: bitrix
