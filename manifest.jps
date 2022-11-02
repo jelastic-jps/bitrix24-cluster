@@ -3,7 +3,7 @@ name: Bitrix
 
 logo: https://raw.githubusercontent.com/lazarenkoalexey/bitrix/main/images/bitrix24.png
 
-description: Bitrix24 Cluster
+description: Bitrix24 Cluster is a collaboration software with a complete toolset for management, collaboration, and communication. It is a unified online workspace to run your businesses. The current package offers automatic clusterization of the Bitrix24 solution ensuring high availability, auto-scalability, and high performance.
 
 baseUrl: https://raw.githubusercontent.com/jelastic-jps/
 
