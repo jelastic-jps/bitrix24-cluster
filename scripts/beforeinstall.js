@@ -36,6 +36,16 @@ nodes.push({
   nodeType: "memcached",
   cloudlets: 16,
   count: 2
+},{
+  nodeType: "storage",
+  count: 1,
+  flexibleCloudlets: ${settings.st_flexibleCloudlets:8},
+  fixedCloudlets: ${settings.st_fixedCloudlets:1},
+  nodeGroup: "storage",
+  validation: {
+    minCount: 1,
+    maxCount: 1
+  }
 });
 
 return {
