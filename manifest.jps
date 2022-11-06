@@ -35,7 +35,7 @@ nodes: definedInOnBeforeInstall
 skipNodeEmails: true
   
 onInstall:
-  - setupSynchronization
+  - storageMount: NFS4
   - deployArchive
   - configureApp
   - installJps:
@@ -214,3 +214,16 @@ actions:
       settings:
         optional: one_env
         delay: 5
+
+  storageMount:
+    - log: Mount Storage
+    - api:
+      - method: jelastic.environment.file.AddMountPointByGroup
+        params:
+          nodeGroup: cp
+          sourceNodeId: ${nodes.storage.master.id}
+          sourcePath: /data
+          path: /var/www/webroot/ROOT
+          sourceAddressType: NODE_GROUP
+          protocol: ${this}
+    - cmd[${nodes.bl[1].id}] : jem service stop
