@@ -51,8 +51,7 @@ nodes.push({
   tag: "2.4.52-python-3.6.15",
   nodeType: "apache-python",
   nodeGroup: "cp2",
-  cloudlets: 16,
-  count: 2
+  cloudlets: 16
 });
 
 return {
