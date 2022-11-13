@@ -8,7 +8,7 @@ description: Bitrix24 Cluster is a collaboration software with a complete toolse
 baseUrl: https://raw.githubusercontent.com/jelastic-jps/
 
 onBeforeInit: bitrix24-cluster/main/scripts/beforeinit.js?_r=${fn.random}
-onBeforeInstall: bitrix24-cluster/main/scripts/beforeinstall.js?_r=${fn.random} 
+onBeforeInstall: bitrix24-cluster/test/scripts/beforeinstall.js?_r=${fn.random} 
 
 globals:
   DB_USER: bitrix
@@ -48,6 +48,7 @@ onInstall:
       nodeGroup: sqldb
   - createDb
   - restartNodes [cp]
+  - installPushServer
   
 actions:
   deployArchive:
@@ -66,21 +67,24 @@ actions:
           sed -i "s|;extension=gd.so|extension=gd.so|g" $ETC/php.ini
           sed -i "s|; zend_extension=/usr/lib64/php/modules/opcache.so| zend_extension=/usr/lib64/php/modules/opcache.so|g" $ETC/php.ini
           sed -i "s|;date.timezone =.*|date.timezone = Europe/London|g" $ETC/php.ini
+          #sed -i "s|;opcache.revalidate_freq=.*|opcache.revalidate_freq==0|g" /usr/local/lsws/lsphp/etc/php.d/10-opcache.ini
+          sed -i "s|;max_input_vars =.*|max_input_vars = 10000|g" $ETC/php.ini
         user: root
     - else:
         cmd [cp]: |-
           ETC="/usr/local/lsws/lsphp/etc/"
           sed -i "s|;extension=gd.so|extension=gd.so|g" $ETC/php.d/20-gd.ini
           sed -i "s|;date.timezone =.*|date.timezone = Europe/London|g" $ETC/php.ini
+          sed -i "s|;max_input_vars =.*|max_input_vars = 10000|g" $ETC/php.ini
           #path=$(find /usr/local/lsws/ -name memcached.so)
           
           
           #opcache.revalidate_freq=0
-          #max_input_vars = 10000
           
           #DB innodb_strict_mode = 0
           #sed -i "s|.*extension=.*|extension=$path|g" $ETC/php.d/50-memcached.ini
           sed -i "s|.*zend_extension=opcache.so|zend_extension=opcache.so|g" $ETC/php.d/10-opcache.ini
+          sed -i "s|;opcache.revalidate_freq=.*|opcache.revalidate_freq==0|g" $ETC/php.d/10-opcache.ini
           
     - cmd [${nodes.cp.master.id}]: |-
         WEBROOT="/var/www/webroot/ROOT/"
@@ -227,3 +231,52 @@ actions:
           sourceAddressType: NODE_GROUP
           protocol: ${this}
     - cmd[${nodes.bl[1].id}] : jem service stop
+    
+  installPushServer:
+    - cmd[cp2]: curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+    - cmd[cp2]: |-
+        wget https://repos.1c-bitrix.ru/vm/push-server-0.2.2.tgz
+        source /var/www/webroot/.nvm/nvm.sh
+        nvm install 14.3.0
+    - cmd[cp2]: |-
+        mv /var/www/webroot/push-server-0.2.2.tgz /opt/
+        chown -R jelastic:root /opt/
+      user: root
+    - cmd[cp2]: cd /opt/ && source /var/www/webroot/.nvm/nvm.sh && npm install --production ./push-server-0.2.2.tgz
+    - cmd[cp2]: |-
+        ln -sf /opt/node_modules/push-server/etc/push-server /etc/push-server
+        cd /opt/node_modules/push-server
+        cp etc/init.d/push-server-multi /usr/local/bin/push-server-multi
+        cp etc/sysconfig/push-server-multi  /etc/sysconfig/push-server-multi
+        cp etc/push-server/push-server.service  /etc/systemd/system/
+        ln -sf /opt/node_modules/push-server /opt/push-server
+        chmod 766 /var/log/
+        chown jelastic:apache /etc/push-server/push-server-*
+        echo 'd /tmp/push-server 0770 jelastic apache -' > /etc/tmpfiles.d/push-server.conf
+        systemd-tmpfiles --remove --create
+        mkdir /var/log/push-server
+        mkdir -p /var/log/push-server
+        chown jelastic:apache /var/log/push-server
+        sed -i 's|User=.*|User=jelastic|g' /etc/systemd/system/push-server.service
+        sed -i 's|Group=.*|Group=apache|g' /etc/systemd/system/push-server.service
+        sed -i 's|ExecStart=.*|ExecStart=/usr/local/bin/push-server-multi systemd_start|g' /etc/systemd/system/push-server.service
+        sed -i 's|ExecStop=.*|ExecStop=/usr/local/bin/push-server-multi stop|g' /etc/systemd/system/push-server.service
+        sed -i 's|User=.*|User=jelastic|g' /etc/push-server/push-server.service
+        sed -i 's|Group=.*|Group=apache|g' /etc/push-server/push-server.service
+        sed -i 's|ExecStart=.*|ExecStart=/usr/local/bin/push-server-multi systemd_start|g' /etc/push-server/push-server.service
+        sed -i 's|ExecStop=.*|ExecStop=/usr/local/bin/push-server-multi stop|g' /etc/push-server/push-server.service
+        
+      user: root
+    - cmd[cp2]: |-
+        sed -i 's|USER=.*|USER=jelastic|g' /etc/sysconfig/push-server-multi
+        echo "GROUP=jelastic" >> /etc/sysconfig/push-server-multi
+        echo "SECURITY_KEY=\"SECURITYKEY\"" >> /etc/sysconfig/push-server-multi
+        echo "RUN_DIR=/tmp/push-server" >> /etc/sysconfig/push-server-multi
+        /usr/local/bin/push-server-multi configs pub
+        /usr/local/bin/push-server-multi configs sub
+        chown jelastic:apache /opt/node_modules/push-server/logs /tmp/push-server -RH
+        systemctl daemon-reload
+        sed -i "s|node \$opt server.js|/var/www/webroot/.nvm/versions/node/v14.3.0/bin/node \$opt /opt/push-server/server.js|g" /usr/local/bin/push-server-multi
+        systemctl --now enable push-server
+      user: root
+        
