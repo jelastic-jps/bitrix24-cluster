@@ -278,5 +278,7 @@ actions:
         systemctl daemon-reload
         sed -i "s|node \$opt server.js|/var/www/webroot/.nvm/versions/node/v14.3.0/bin/node \$opt /opt/push-server/server.js|g" /usr/local/bin/push-server-multi
         systemctl --now enable push-server
+        rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+        wget https://repo.bitrix.info/yum/bitrix-env.sh && chmod +x bitrix-env.sh && ./bitrix-env.sh
       user: root
         
