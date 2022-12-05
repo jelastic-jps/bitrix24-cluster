@@ -31,7 +31,7 @@ if ('${settings.ls-addon:false}'== 'true') {
 nodes.push({
   nodeType: "mysql",
   cloudlets: 10,
-  count: 2
+  count: 3
 }, {
   nodeType: "memcached",
   cloudlets: 16,
