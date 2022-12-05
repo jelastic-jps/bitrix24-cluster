@@ -29,9 +29,21 @@ if ('${settings.ls-addon:false}'== 'true') {
 }
 
 nodes.push({
-  nodeType: "mysql",
+  nodeType: "mariadb-dockerized",
   cloudlets: 10,
-  count: 2
+  count: 3,
+  cluster: {
+    scheme: "galera",
+    db_user: "${globals.DB_USER}",
+    db_pass: "${globals.DB_PASS}",
+    is_proxysql: false
+  },
+  env: {
+    SCHEME: "galera",
+    DB_USER: "${globals.DB_USER}",
+    DB_PASS: "${globals.DB_PASS}",
+    IS_PROXYSQL: false
+  } 
 }, {
   nodeType: "memcached",
   cloudlets: 16,

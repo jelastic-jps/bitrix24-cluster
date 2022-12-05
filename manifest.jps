@@ -8,7 +8,7 @@ description: Bitrix24 Cluster is a collaboration software with a complete toolse
 baseUrl: https://raw.githubusercontent.com/jelastic-jps/
 
 onBeforeInit: bitrix24-cluster/main/scripts/beforeinit.js?_r=${fn.random}
-onBeforeInstall: bitrix24-cluster/test/scripts/beforeinstall.js?_r=${fn.random} 
+onBeforeInstall: bitrix24-cluster/main/scripts/beforeinstall.js?_r=${fn.random} 
 
 globals:
   DB_USER: bitrix
@@ -38,14 +38,6 @@ onInstall:
   - storageMount: NFS4
   - deployArchive
   - configureApp
-  - installJps:
-      jps: ${baseUrl}mysql-cluster/master/scripts/ms-mm-configuration.jps
-      settings:
-        path: "${baseUrl}mysql-cluster/master"
-        db_user: "${globals.DB_USER}"
-        db_pass: "${globals.DB_PASS}"
-        scheme: "master"
-      nodeGroup: sqldb
   - createDb
   - restartNodes [cp]
   - installPushServer
