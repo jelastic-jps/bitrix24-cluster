@@ -39,7 +39,7 @@ nodes.push({
     is_proxysql: false
   },
   env: {
-    SCHEME: db_cluster,
+    SCHEME: "galera",
     DB_USER: "${globals.DB_USER}",
     DB_PASS: "${globals.DB_PASS}",
     IS_PROXYSQL: false
