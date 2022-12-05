@@ -31,7 +31,19 @@ if ('${settings.ls-addon:false}'== 'true') {
 nodes.push({
   nodeType: "mariadb",
   cloudlets: 10,
-  count: 3
+  count: 3,
+  cluster: {
+    scheme: db_cluster,
+    db_user: "${globals.DB_USER}",
+    db_pass: "${globals.DB_PASS}",
+    is_proxysql: false
+  },
+  env: {
+    SCHEME: db_cluster,
+    DB_USER: "${globals.DB_USER}",
+    DB_PASS: "${globals.DB_PASS}",
+    IS_PROXYSQL: false
+  } 
 }, {
   nodeType: "memcached",
   cloudlets: 16,
