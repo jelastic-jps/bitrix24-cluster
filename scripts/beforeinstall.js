@@ -29,7 +29,7 @@ if ('${settings.ls-addon:false}'== 'true') {
 }
 
 nodes.push({
-  nodeType: "mysql",
+  nodeType: "mariadb",
   cloudlets: 10,
   count: 3
 }, {
