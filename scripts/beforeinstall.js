@@ -29,7 +29,7 @@ if ('${settings.ls-addon:false}'== 'true') {
 }
 
 nodes.push({
-  nodeType: "mariadb",
+  nodeType: "mariadb-dockerized",
   cloudlets: 10,
   count: 3,
   cluster: {
