@@ -9,8 +9,8 @@ define("DBPersistent", false);
 \$DBType = "mysql";
 \$DBHost = "DB:3306";
 \$DBName = "sitemanager";
-\$DBLogin = "${globals.DB_USER}";
-\$DBPassword = "${globals.DB_PASS}";
+\$DBLogin = "DB_USER";
+\$DBPassword = "DB_PASS";
 \$DBDebug = false;
 \$DBDebugToFile = false;
 
@@ -29,11 +29,11 @@ define("CACHED_b_lang_domain", 3600);
 define("CACHED_b_site_template", 3600);
 define("CACHED_b_event", 3600);
 define("CACHED_b_agent", 3660);
-#define('BX_SECURITY_SESSION_MEMCACHE_HOST', '${nodes.cache[0].intIP}');
+#define('BX_SECURITY_SESSION_MEMCACHE_HOST', 'intIP');
 #define('BX_SECURITY_SESSION_MEMCACHE_PORT', 11211);
 #define("BX_CACHE_TYPE", "memcached");
 #define("BX_CACHE_SID", $_SERVER["DOCUMENT_ROOT"]."#01");
-#define("BX_MEMCACHE_HOST", "${nodes.cache[0].intIP}");
+#define("BX_MEMCACHE_HOST", "intIP");
 #define("BX_MEMCACHE_PORT", "11211");
 \$_SERVER["REMOTE_ADDR"] = \$_SERVER['HTTP_CF_CONNECTING_IP'];
 ?>
