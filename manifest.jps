@@ -80,113 +80,15 @@ actions:
           
     - cmd [${nodes.cp.master.id}]: |-
         WEBROOT="/var/www/webroot/ROOT/"
-        cat << EOF > $WEBROOT/bitrix/php_interface/dbconn.php
-        <? 
-        define("SHORT_INSTALL", true);
-        define("SHORT_INSTALL_CHECK", true);
-
-        define("MYSQL_TABLE_TYPE", "INNODB");
-        define("BX_UTF", true);
-
-        define("DBPersistent", false);
-        \$DBType = "mysql";
-        \$DBHost = "DB:3306";
-        \$DBName = "sitemanager";
-        \$DBLogin = "${globals.DB_USER}";
-        \$DBPassword = "${globals.DB_PASS}";
-        \$DBDebug = false;
-        \$DBDebugToFile = false;
-
-        define("BX_FILE_PERMISSIONS", 0664);
-        define("BX_DIR_PERMISSIONS", 0775);
-        @umask(~BX_DIR_PERMISSIONS);
-
-        define("BX_USE_MYSQLI", true);
-        define("DELAY_DB_CONNECT", true);
-        define("CACHED_menu", 3600);
-        define("CACHED_b_file", 3600);
-        define("CACHED_b_file_bucket_size", 10);
-        define("CACHED_b_lang", 3600);
-        define("CACHED_b_option", 3600);
-        define("CACHED_b_lang_domain", 3600);
-        define("CACHED_b_site_template", 3600);
-        define("CACHED_b_event", 3600);
-        define("CACHED_b_agent", 3660);
-        #define('BX_SECURITY_SESSION_MEMCACHE_HOST', '${nodes.cache[0].intIP}');
-        #define('BX_SECURITY_SESSION_MEMCACHE_PORT', 11211);
-        #define("BX_CACHE_TYPE", "memcached");
-        #define("BX_CACHE_SID", $_SERVER["DOCUMENT_ROOT"]."#01");
-        #define("BX_MEMCACHE_HOST", "${nodes.cache[0].intIP}");
-        #define("BX_MEMCACHE_PORT", "11211");
-        \$_SERVER["REMOTE_ADDR"] = \$_SERVER['HTTP_CF_CONNECTING_IP'];
-        ?>
-        EOF
-
-        cat << EOF > $WEBROOT/bitrix/.settings.php
-        <?php
-        return array (
-          'utf_mode' =>
-          array (
-            'value' => true,
-            'readonly' => true,
-          ),
-          'cache_flags' =>
-          array (
-            'value' =>
-            array (
-              'config_options' => 3600,
-              'site_domain' => 3600,
-            ),
-            'readonly' => false,
-          ),
-          'cookies' =>
-          array (
-            'value' =>
-            array (
-              'secure' => false,
-              'http_only' => true,
-            ),
-            'readonly' => false,
-          ),
-          'exception_handling' =>
-          array (
-            'value' =>
-            array (
-              'debug' => false,
-              'handled_errors_types' => 4437,
-              'exception_errors_types' => 4437,
-              'ignore_silence' => false,
-              'assertion_throws_exception' => true,
-              'assertion_error_type' => 256,
-              'log' => array (
-                  'settings' =>
-                  array (
-                    'file' => '/var/log/litespeed/exceptions.log',
-                    'log_size' => 1000000,
-                ),
-              ),
-            ),
-            'readonly' => false,
-          ),
-
-          'connections' =>
-          array (
-            'value' =>
-            array (
-              'default' =>
-              array (
-                'className' => '\\Bitrix\\Main\\DB\\MysqliConnection',
-                'host' => 'DB',
-                'database' => 'sitemanager',
-                'login' => '${globals.DB_USER}',
-                'password' => '${globals.DB_PASS}',
-                'options' => 2,
-              ),
-            ),
-            'readonly' => true,
-          )
-        );
-        EOF
+        curl -fsSL "${baseUrl}/bitrix24-cluster/main/scripts/dbconn.php" -o $WEBROOT/bitrix/php_interface/dbconn.php
+        sed -i "s|DB_USER|\${globals.DB_USER}|g" $WEBROOT/bitrix/php_interface/dbconn.php
+        sed -i "s|DB_PASS|\${globals.DB_PASS}|g" $WEBROOT/bitrix/php_interface/dbconn.php
+        sed -i "s|intIP|\${nodes.cache[0].intIP}|g" $WEBROOT/bitrix/php_interface/dbconn.php
+        curl -fsSL "https://raw.githubusercontent.com/jelastic-jps/bitrix24-cluster/main/scripts/.settings.php" -o $WEBROOT/bitrix/.settings.php     
+        sed -i "s|DB_USER|\${globals.DB_USER}|g" $WEBROOT/bitrix/.settings.php
+        sed -i "s|DB_PASS|\${globals.DB_PASS}|g" $WEBROOT/bitrix/.settings.php
+        
+        
         [[ $USER -eq "nginx" ]] && ETC="/etc/" || {
           ETC="/usr/local/lsws/lsphp/etc/"
           PHP_D="${ETC}/php.d/"
@@ -273,4 +175,3 @@ actions:
         rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
         wget https://repo.bitrix.info/yum/bitrix-env.sh && chmod +x bitrix-env.sh && ./bitrix-env.sh
       user: root
-        
