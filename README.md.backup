@@ -25,7 +25,7 @@ Where:
 
  - Web Application Firewall will be enabled by the default if LiteSpeed Web Server will be installed
 
- - The Bitrix24 application itself is handled by either [LiteSpeed Web Server](https://www.virtuozzo.com/application-platform-docs/litespeed-web-server/) or [NGINX PHP](https://www.virtuozzo.com/application-platform-docs/nginx-php/) servers with preconfigured automatic horizontal scaling to handle load spikes
+ - The Bitrix24 application itself is handled by either [LiteSpeed Web Server](https://www.virtuozzo.com/application-platform-docs/litespeed-web-server/) or NGINX PHP servers with preconfigured automatic horizontal scaling to handle load spikes
 
  - [Memecached](https://www.virtuozzo.com/application-platform-docs/memcached/). For centralized and robust cache data storage, the Bitrix solutions takes advantage of the memcached server cluster which is in use by many web projects
 
