@@ -5,10 +5,13 @@ logo: /images/bitrix24.png
 
 description: Bitrix24 Cluster is a collaboration software with a complete toolset for management, collaboration, and communication. It is a unified online workspace to run your businesses. The current package offers automatic clusterization of the Bitrix24 solution ensuring high availability, auto-scalability, and high performance.
 
-baseUrl: https://raw.githubusercontent.com/jelastic-jps/
+baseUrl: https://raw.githubusercontent.com/jelastic-jps/bitrix24-cluster/main/
 
-onBeforeInit: bitrix24-cluster/main/scripts/beforeinit.js?_r=${fn.random}
-onBeforeInstall: bitrix24-cluster/main/scripts/beforeinstall.js?_r=${fn.random} 
+onBeforeInit: scripts/beforeinit.js?_r=${fn.random}
+onBeforeInstall: scripts/beforeinstall.js?_r=${fn.random} 
+
+mixins:
+  - configs/vers.yaml
 
 globals:
   DB_USER: bitrix
@@ -48,7 +51,7 @@ actions:
       WEBROOT="/var/www/webroot/ROOT/"
       cd $WEBROOT && rm -rf $WEBROOT/*
       #curl -fsSL "https://download.jelastic.com/public.php?service=files&t=b419e0e04f498fabab3bda5fff66f870&download" -o $WEBROOT/bitrix.zip
-      curl -fsSL "https://www.bitrixsoft.com/download/portal/en_bitrix24_encode.zip" -o $WEBROOT/bitrix.zip
+      curl -fsSL "https://www.bitrixsoft.com/download/portal/${globals.version_bitrix24}_encode.zip" -o $WEBROOT/bitrix.zip
       unzip -o $WEBROOT/bitrix.zip
       mkdir $WEBROOT/bitrix/php_interface/
       
@@ -80,11 +83,11 @@ actions:
           
     - cmd [${nodes.cp.master.id}]: |-
         WEBROOT="/var/www/webroot/ROOT/"
-        curl -fsSL "${baseUrl}/bitrix24-cluster/main/scripts/dbconn.php" -o $WEBROOT/bitrix/php_interface/dbconn.php
+        curl -fsSL "${baseUrl}/scripts/dbconn.php" -o $WEBROOT/bitrix/php_interface/dbconn.php
         sed -i "s|DB_USER|\${globals.DB_USER}|g" $WEBROOT/bitrix/php_interface/dbconn.php
         sed -i "s|DB_PASS|\${globals.DB_PASS}|g" $WEBROOT/bitrix/php_interface/dbconn.php
         sed -i "s|intIP|\${nodes.cache[0].intIP}|g" $WEBROOT/bitrix/php_interface/dbconn.php
-        curl -fsSL "https://raw.githubusercontent.com/jelastic-jps/bitrix24-cluster/main/scripts/.settings.php" -o $WEBROOT/bitrix/.settings.php     
+        curl -fsSL "${baseUrl}/scripts/.settings.php" -o $WEBROOT/bitrix/.settings.php     
         sed -i "s|DB_USER|\${globals.DB_USER}|g" $WEBROOT/bitrix/.settings.php
         sed -i "s|DB_PASS|\${globals.DB_PASS}|g" $WEBROOT/bitrix/.settings.php
         
