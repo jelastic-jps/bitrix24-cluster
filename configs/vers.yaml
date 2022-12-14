@@ -1,4 +1,4 @@
 globals:
   version_bitrix24: "en_bitrix24"
-//en_bitrix24 - business
-//en_bitrix24_enterprise - enterprize
+#en_bitrix24 - business
+#en_bitrix24_enterprise - enterprize
