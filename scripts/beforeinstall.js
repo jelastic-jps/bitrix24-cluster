@@ -60,7 +60,7 @@ nodes.push({
   }
 },{
   "displayName": "Push Server",
-  tag: "2.4.53-python-3.7.12",
+  tag: "2.4.54-python-3.7.13",
   nodeType: "apache-python",
   nodeGroup: "cp2",
   cloudlets: 16
