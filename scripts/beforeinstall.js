@@ -20,7 +20,7 @@ if ('${settings.ls-addon:false}'== 'true') {
     cloudlets: 16,
     count: 2
   }, {
-    nodeType: "nginxphp",
+    nodeType: "apache",
     links: "sqldb:DB",
     nodeGroup: "cp",
     cloudlets: 16,
