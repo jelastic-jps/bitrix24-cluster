@@ -56,7 +56,7 @@ actions:
       mkdir $WEBROOT/bitrix/php_interface/
       
   configureApp:
-    - if ("${nodes.cp.master.nodeType}" == "nginxphp"):
+    - if ("${nodes.cp.master.nodeType}" == "apache"):
         cmd [cp]: |-
           ETC="/etc/"
           sed -i "s|;extension=gd.so|extension=gd.so|g" $ETC/php.ini
